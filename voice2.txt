@@ -1,0 +1,65 @@
+import smtplib
+import speech_recognition as sr
+from email.message import EmailMessage
+import pyttsx3
+
+listener = sr.Recognizer()
+tts = pyttsx3.init()  # Initialize the text-to-speech engine
+
+# Dictionary to map spoken words to email addresses
+email_dict = {"what":"priyankasanjeev9515@gmail.com"}
+
+def talking_tom(text):
+    tts.say(text)
+    tts.runAndWait()
+
+def mic():
+    with sr.Microphone() as source:
+        print("Program is listening...")
+        try:
+            voice = listener.listen(source, timeout=5)
+            data = listener.recognize_google(voice).lower()
+            print(data)
+            return data
+        except sr.WaitTimeoutError:
+            print("Timeout waiting for audio.")
+            return None
+        except sr.UnknownValueError:
+            print("Could not understand audio. Please try again.")
+            return None
+
+def send_mail(receiver, subject, body):
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login("anithareddy9194@gmail.com", "phjdzqekkifpzeth")  # Replace with your Gmail credentials
+        email = EmailMessage()
+        email["From"] = "anithareddy9194@gmail.com"  # Replace with your email
+        email["To"] = receiver
+        email["Subject"] = subject
+        email.set_content(body)
+        server.send_message(email)
+        print("Your email has been sent")
+    except smtplib.SMTPAuthenticationError:
+        print("SMTP Authentication Error. Check your email and password.")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+    finally:
+        server.quit()
+
+def main_poc():
+    talking_tom("To whom do you want to send this email?")
+    name = mic()
+    if name is not None and name in email_dict:
+        receiver = email_dict[name]
+        talking_tom("Speak the subject of the email")
+        subject = mic()
+        talking_tom("Speak the message of the email")
+        body = mic()
+        if subject and body:
+            send_mail(receiver, subject, body)
+    else:
+        print("Name not recognized or not in the dictionary.")
+
+if __name__ == "__main__":
+    main_poc()
